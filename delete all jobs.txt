@@ -1,0 +1,53 @@
+
+select JobName
+from [SNOOPER].[dbo].[jobs_to_run]
+
+
+drop table if exists tempdb..#scripting_table
+create table #scripting_table
+(
+[copy and run] nvarchar(max) null
+);
+
+
+DECLARE @sp_name NVARCHAR(MAX);
+DECLARE @SQL NVARCHAR(1000); 
+
+
+DECLARE cats CURSOR
+	FOR 
+		(
+select jobname
+from [SNOOPER].[dbo].[jobs_to_run]
+); 
+
+OPEN cats
+
+
+FETCH NEXT FROM cats INTO 
+	@sp_name;
+
+WHILE @@FETCH_STATUS = 0
+    BEGIN
+
+		SET @SQL = 'USE [msdb]
+/****** Object:  Job [SNOOPER_EXEC sp_log_Batch_Requests_sec_metric]    Script Date: 15/11/2024 20:02:30 ******/
+EXEC msdb.dbo.sp_delete_job @job_name=N'''+@sp_name+''', @delete_unused_schedule=1
+';
+
+
+		insert into #scripting_table([copy and run])
+		values(@SQL)
+	
+		--EXECUTE  SP_EXECUTESQL @SQL;
+
+	
+        FETCH NEXT FROM cats INTO 
+			@sp_name;
+    END;
+
+CLOSE cats;
+DEALLOCATE cats;
+
+select *
+from #scripting_table

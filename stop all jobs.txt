@@ -1,0 +1,58 @@
+
+
+drop table if exists tempdb..#scripting_table2
+create table #scripting_table2
+(
+[copy and run] nvarchar(max) null
+);
+
+
+DECLARE @sp_name2 NVARCHAR(MAX);
+DECLARE @SQL2 NVARCHAR(1000); 
+
+
+DECLARE cats2 CURSOR
+	FOR 
+		(
+SELECT 
+    job_id
+FROM 
+    msdb.dbo.sysjobs
+where name like '%sp_log%'
+and name not like 'sp_runner_sp_log'
+); 
+
+OPEN cats2
+
+
+FETCH NEXT FROM cats2 INTO 
+	@sp_name2;
+
+WHILE @@FETCH_STATUS = 0
+    BEGIN
+
+		SET @SQL2 = 'USE msdb
+
+
+EXEC dbo.sp_stop_job 
+    @job_id = '''+@sp_name2+'''
+
+
+';
+
+
+		insert into #scripting_table2([copy and run])
+		values(@SQL2)
+	
+		--EXECUTE  SP_EXECUTESQL @SQL;
+
+	
+        FETCH NEXT FROM cats2 INTO 
+			@sp_name2;
+    END;
+
+CLOSE cats2;
+DEALLOCATE cats2;
+
+select *
+from #scripting_table2
