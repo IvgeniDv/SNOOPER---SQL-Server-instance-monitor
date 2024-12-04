@@ -7,7 +7,7 @@
 
 
 
-SQL Server Instance Monitor
+SQL Server Instance Monitor  - SNOOPER
 
 -- =============================================
 
